@@ -1,0 +1,46 @@
+name: Cloud 8-Photo Video Renderer
+
+on:
+  workflow_dispatch:
+
+jobs:
+  render-8photo-video:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python Dependencies
+        run: |
+          pip install requests pillow "edge-tts>=7.3.1"
+
+      - name: Render 8-Photo Pro Video
+        run: |
+          python render_8photo_video.py
+
+      - name: Upload Video as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecoflow_8images_pro_video
+          path: ecoflow_8images_pro_video.mp4
+
+      - name: Commit & Push Video to Deals Media CDN
+        run: |
+          git config --global user.name "Cloud Video Engine"
+          git config --global user.email "video@autopilot.com"
+          git add ecoflow_8images_pro_video.mp4 || true
+          git commit -m "Auto-render 8-photo official video ecoflow_8images_pro_video.mp4 [skip ci]" || true
+          git push || true
